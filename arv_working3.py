@@ -159,7 +159,7 @@ def main(argv):
     x,y = startup(argv,x,y) 
     a=[]
     for i in range (1,len(x)+1):
-        z=lot(i,x[i-1],y[i-1],0)
+        z=lot(i,x[i-1],y[i-1],1)
         a.append(z)
         #print("hi\n")
         #a[i-1].print_values()
