@@ -23,18 +23,20 @@ class lot:
         #print(self.ltn,self.x,self.y,self.status)
         return 1
 
-def detect(a,length):
-    camera = PiCamera()
-    camera.start_preview()
-    sleep(2)
-    camera.capture('foo1.jpg')
-    camera.stop_preview()
-    camera.close()
-    default_file = '/home/pi/foo1.jpg'
+def detect(k,a,length):
+    #camera = PiCamera()
+    #camera.start_preview()
+    #sleep(2)
+    #camera.capture('foo1.jpg')
+    #camera.stop_preview()
+    #camera.close()
+    #default_file = '/home/pi/foo1.jpg'
 
    # a[0].print_values()
    # default_file = '/home/pi/opencv/samples/data/detect_blob.png'
     #Loadsanimage
+    print(k);
+    default_file = '/home/pi/ECE-568/hidden'+str(k)+'.jpg'
     src = cv.imread(cv.samples.findFile(default_file),cv.IMREAD_COLOR)
     #Checkifimageisloadedfine
     if src is None:
@@ -56,6 +58,7 @@ def detect(a,length):
     minRadius = 0,maxRadius = 200)
     cnt=0
     #print("i'm printing the length")
+    print(default_file)
     #print(length)
     if circles is None:
         print('no circle to detect')
@@ -83,7 +86,7 @@ def detect(a,length):
                 print("Lot",m+1 ," is free")
                 detected=1
                 if(a[m].status==0):
-                    print('now this slot is free')
+                    print('Now this slot is made free')
                     a[m].status = 1
                     a[m].update=1
                     break
@@ -121,13 +124,13 @@ def detect(a,length):
 
 def startup(argv,x,y):
     print("Hello")
-    camera=PiCamera()
-    camera.start_preview()
-    sleep(4)
-    camera.capture('foo.jpg')
-    camera.stop_preview()
-    camera.close()
-    default_file = '/home/pi/foo.jpg'
+    #camera=PiCamera()
+    #camera.start_preview()
+    #sleep(30)
+    #camera.capture('foo.jpg')
+    #camera.stop_preview()
+    #camera.close()
+    default_file = 'full.jpg'
     filename = argv[0] if len(argv) >0 else default_file
     
     src = cv.imread(cv.samples.findFile(filename),cv.IMREAD_COLOR)
@@ -163,7 +166,6 @@ def startup(argv,x,y):
             x.append(i[0])
             y.append(i[1])
             
-   # print (count);
     
     cv.imshow("detectedcircles",src)
     cv.waitKey(0)
@@ -181,7 +183,6 @@ def post(a,length,posflag):
              add={"spaceId":(i+1),"isEmpty":a[i].status}
              data["spaceList"].append(add)
              a[i].update=0
-    
     headers ={'Content-type':'application/json'}
     # sending post request and saving response as response object
     r = requests.post(url, data = json.dumps(data),headers=headers)
@@ -212,42 +213,35 @@ def getspace(ret_value):
         if (i!=10):
             i = i +48
         lcd_print(i,ret_value)
+    #print(i)
 
 def lcd_print(slot_number,slot):
-    spi=spidev.SpiDev()
-    spi.open(0,0)
-    spi.max_speed_hz=32768
+        spi=spidev.SpiDev()
+        spi.open(0,0)
+        spi.max_speed_hz=32768
 
-    spi.mode=0b11
-    slot_number1 = 48
-    slot_number2 = 49
-    #empty_slot = [83,108,111,116,32,105,115,32]
-    empty_slot = [69,109,112,116,121,32,83,108,111,116,32,105,115,32]
-    no_slot = [78,111,32,70,114,101,101,32,83,108,111,116]
-    #spi.clear()
-    if(slot_number==10):
-        spi.writebytes([254,81])  #clear
-        sleep(0.0015)
-       # spi.writebytes([254,69]) #set cursor
-        #spi.writebytes([254,84])
-        spi.writebytes(empty_slot)
-        spi.writebytes([49])
-        spi.writebytes([48])
+        spi.mode=0b11
+        slot_number1 = 48
+        slot_number2 = 49
+        empty_slot = [69,109,112,116,121,32,83,108,111,116,32,105,115,32]
+        no_slot = [78,111,32,70,114,101,101,32,83,108,111,116]
+        #spi.clear()
+        if(slot_number==10):
+            spi.writebytes([254,81])
+            sleep(0.0015)
+            spi.writebytes(empty_slot)
+            spi.writebytes([49])
+            spi.writebytes([48])
 
-    elif(slot ==-1):
-        spi.writebytes([254,81])  #clear
-        sleep(0.0015)
-        #spi.writebytes([254,69]) #set cursor
-        #spi.writebytes([254,84])
-        spi.writebytes(no_slot)
-    elif(slot==0):
-        spi.writebytes([254,81])  #clear
-        sleep(0.0015)
-       # spi.writebytes([254,69]) #set cursor
-        #spi.writebytes([254,84])   #load custom character
-        spi.writebytes(empty_slot)
-        spi.writebytes([slot_number])
-    spi.close()
+        elif(slot ==-1):
+            spi.writebytes([254,81])
+            sleep(0.0015)
+            spi.writebytes(no_slot)
+        elif(slot==0):
+            spi.writebytes([254,81])
+            sleep(0.0015)
+            spi.writebytes(empty_slot)
+            spi.writebytes([slot_number])
 
 def cancel(a,length):
 
@@ -325,16 +319,18 @@ def main(argv):
     post(a,len(x),posflag)
     cancel(a,len(x))
     posflag=0
+    for k in range(0,len(a)):
+        a[k].status = 1 
     getspace(0)
     lcd_print_init()
-    for k in range (0,len(a)):
-        a[k].status = 1
-    while(1):
+    i = 0
+    #while(1):
+    for i in range(1,23):
         if(wiringpi.digitalRead(27) == 0):
             print ("INPUT START")
-            i = i +1
-            ret_value = detect(a,len(x))
+            ret_value = detect(i,a,len(x))
             getspace(ret_value)
+            i = i +1
             if(ret_value == 0):
                 cv.destroyWindow("detectedcircles")
             print("FINISHED")

@@ -85,7 +85,7 @@ def detect(filename,a,length):
             print(i+1)
             print("is free")
             break
-    post(a,length)
+    #post(a,length)
     return 0
 
 
